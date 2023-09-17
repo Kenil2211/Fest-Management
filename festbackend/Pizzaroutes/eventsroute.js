@@ -1,5 +1,7 @@
 const express = require('express');
 const router = express.Router();/// This Router object of express with the help of that we can create different route
+const multer = require("multer");
+const path = require("path");
 
 const festmodel = require('../eventmodel/festmodel');
 const participationmodel = require('../eventmodel/participationmodel')
@@ -19,22 +21,21 @@ router.get('/getallevent', async (req, res) => {
     }
 })
 
-router.post('/addevent',async(req,res)=>{
+router.post('/addevent', async (req, res) => {
 
-    try{
+    try {
         const new_event = await festmodel.create(req.body)
         res.status(201).json({
-            message:"Event Created",
-            data:new_event
+            message: "Event Created",
+            data: new_event
         })
     }
-    catch(err)
-    {
+    catch (err) {
         res.status(400).json({
-            message:err
+            message: err
         })
     }
-    
+
 })
 
 router.get('/getallparticipant', async (req, res) => {
@@ -65,20 +66,19 @@ router.get('/events/:org', async (req, res) => {
     }
 })
 
-router.get('/event/:id',async(req,res)=>{
+router.get('/event/:id', async (req, res) => {
 
-    try{
-        var id=req.params.id
-        var eventData =await festmodel.findById(id)
+    try {
+        var id = req.params.id
+        var eventData = await festmodel.findById(id).populate('enrolled_students').exec()
         res.status(200).json({
-            message:"Event Fecthed",
-            data:eventData
+            message: "Event Fecthed",
+            data: eventData
         })
     }
-    catch(e)
-    {
+    catch (e) {
         res.status(401).json({
-            message:e
+            message: e
         })
     }
 
@@ -87,40 +87,85 @@ router.get('/event/:id',async(req,res)=>{
 router.delete('/:id', async (req, res) => {
 
     var id = req.params.id
-    festmodel.findByIdAndDelete(id,(success,err)=>{
+    festmodel.findByIdAndDelete(id, (success, err) => {
 
-        if(success)
-        {
+        if (success) {
             res.status(200).json({
-                message:"Event deleted"
+                message: "Event deleted"
             })
         }
-        else{
+        else {
             res.status(500).send()
         }
 
     })
 })
 
-router.post('/addparticipant/:eid/:id',async(req,res)=>{
+router.post('/addparticipant/:eid/:sid', async (req, res) => {
 
-    try{
-        var eventId =req.params.eid
-        var id= req.params.id
-        var add_participant= await festmodel.findByIdAndUpdate(eventId,{$push:{enrolled_students:id}})
-        console.log('---',add_participant)
+    try {
+        var eventId = req.params.eid
+        var id = req.params.sid
+        var add_participant = await festmodel.findByIdAndUpdate(eventId, { $push: { enrolled_students: id } })
+        console.log('---', add_participant)
         res.status(200).json({
-            message:"Student Added To Event", 
+            message: "Student Added To Event",
         })
     }
-    catch(err)
-    {
+    catch (err) {
         res.status(401).json({
-            message:"Error"
+            message: "Error"
         })
     }
 
 })
+
+router.put('/update/:eid', async (req, res) => {
+
+    try {
+        var eventId = req.params.eid
+        var updated_event = await festmodel.findByIdAndUpdate(eventId, req.body, { new: true })
+        res.status(201).json({
+            message: "Event Updated",
+            data: updated_event
+        })
+    } catch (e) {
+        res.status('401').json({
+            message: "Error"
+        })
+    }
+
+})
+
+const storage = multer.diskStorage({
+    destination: '../src/Images',
+    filename: (req, file, ab) => {
+        ab(null, file.originalname);
+    },
+});
+
+const upload = multer(
+    {
+        storage: storage,
+        limits: { fileSize: 9000000 },
+
+    }).single("file");
+
+router.post('/addeventimage', (req, res) => {
+
+    upload(req, res, (err) => {
+
+        if (err) {
+            return res.status(400).json({ error: err.message });
+        }
+        else {
+            res.json({
+                file: req.file,
+                message: "File uploaded successfully",
+            })
+        }
+    });
+});
 
 
 module.exports = router;

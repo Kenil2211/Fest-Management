@@ -9,6 +9,7 @@ import { AdminScreen } from './Screen/AdminScreen';
 import { Cesaadmin } from './Screen/Cesaadmin';
 import { Sacadmin } from './Screen/Sacadmin';
 import { UpdateEvent } from './Screen/UpdateEvent';
+import { AddEvent } from './Screen/AddEvent';
 
 function App() {
 
@@ -26,6 +27,7 @@ function App() {
         <Route path='/cesaadmin' Component={Cesaadmin} exact />
         <Route path='/sacadmin' Component={Sacadmin} exact />
         <Route path='/:id/update' Component={UpdateEvent} exact />
+        <Route path='/addevent' Component={AddEvent} exact/>
       </Routes>
     </BrowserRouter>
 
